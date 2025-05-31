@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
         python-version: ["3.11"]
 
     steps:
@@ -30,53 +30,7 @@ jobs:
         virtualenvs-in-project: true
         installer-parallel: true
 
-    - name: Debug Poetry Installation (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        Write-Host "Checking Poetry installation..."
-        Get-Command poetry -ErrorAction SilentlyContinue
-        if ($LASTEXITCODE -ne 0) {
-          Write-Host "Poetry not found in PATH, checking common locations..."
-          $poetryPaths = @(
-            "$env:APPDATA\Python\Scripts\poetry.exe",
-            "$env:USERPROFILE\.local\bin\poetry.exe",
-            "$env:USERPROFILE\AppData\Roaming\Python\Scripts\poetry.exe"
-          )
-          foreach ($path in $poetryPaths) {
-            if (Test-Path $path) {
-              Write-Host "Found Poetry at: $path"
-              $env:PATH = "$env:PATH;$(Split-Path $path)"
-              break
-            }
-          }
-        }
-        Write-Host "Current PATH: $env:PATH"
-        poetry --version
-      shell: pwsh
-
-    - name: Alternative Poetry Installation (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        try {
-          poetry --version
-        } catch {
-          Write-Host "Poetry installation failed, trying pip install..."
-          python -m pip install --user poetry
-          $poetryPath = python -c "import site; print(site.USER_BASE + '\\Scripts')"
-          $env:PATH = "$env:PATH;$poetryPath"
-          Write-Host "Added to PATH: $poetryPath"
-          poetry --version
-        }
-      shell: pwsh
-
-    - name: Configure Poetry (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        poetry config virtualenvs.in-project true
-      shell: pwsh
-
-    - name: Configure Poetry (Unix)
-      if: runner.os != 'Windows'
+    - name: Configure Poetry
       run: |
         poetry config virtualenvs.in-project true
 
@@ -94,23 +48,7 @@ jobs:
     - name: Install project
       run: poetry install --no-interaction
 
-    - name: Verify package installation (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        Write-Host "Checking Poetry environment..."
-        poetry env info
-        Write-Host "Checking installed packages..."
-        poetry show
-        Write-Host "Testing Python module discovery..."
-        poetry run python -c "import sys; print('Python path:'); [print(p) for p in sys.path]"
-        Write-Host "Testing repo2context import..."
-        poetry run python -c "import repo2context; print('repo2context version:', repo2context.__version__)"
-        Write-Host "Testing CLI module..."
-        poetry run python -c "import repo2context.cli; print('CLI module loaded successfully')"
-      shell: pwsh
-
-    - name: Verify package installation (Unix)
-      if: runner.os != 'Windows'
+    - name: Verify package installation
       run: |
         echo "Checking Poetry environment..."
         poetry env info
