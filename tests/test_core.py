@@ -117,19 +117,20 @@ class TestGenerateContext:
             output_files = list(output_path.glob("repocontext_part*.md"))
             assert len(output_files) >= 1
 
-            # Check content of first file
-            first_file = output_files[0]
-            content = first_file.read_text()
+            # Check content across all files (files may be split across parts)
+            all_content = ""
+            for output_file in output_files:
+                all_content += output_file.read_text()
 
             # Should contain our test files
-            assert "main.py" in content
-            assert "config.json" in content
-            assert "README.md" in content
+            assert "main.py" in all_content
+            assert "config.json" in all_content
+            assert "README.md" in all_content
 
             # Should not contain ignored files
-            assert "binary_file.bin" not in content
-            assert "temp/ignored.txt" not in content
-            assert ".cache/cache.txt" not in content
+            assert "binary_file.bin" not in all_content
+            assert "temp/ignored.txt" not in all_content
+            assert ".cache/cache.txt" not in all_content
 
     def test_generate_context_with_extension_filter(self):
         """Test context generation with extension filter."""
