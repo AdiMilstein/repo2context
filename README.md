@@ -2,7 +2,7 @@
 
 > One-command repo → Markdown context generator for LLM workflows
 
-[![CI](https://github.com/yourusername/repo2context/workflows/CI/badge.svg)](https://github.com/yourusername/repo2context/actions)
+[![CI](https://github.com/AdiMilstein/repo2context/workflows/CI/badge.svg)](https://github.com/AdiMilstein/repo2context/actions)
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/release/python-3110/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 

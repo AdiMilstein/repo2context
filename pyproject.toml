@@ -6,7 +6,7 @@ authors = ["Your Name <your.email@example.com>"]
 license = "MIT"
 readme = "README.md"
 packages = [{include = "repo2context", from = "src"}]
-repository = "https://github.com/yourusername/repo2context"
+repository = "https://github.com/AdiMilstein/repo2context"
 keywords = ["llm", "context", "repository", "markdown", "cli"]
 classifiers = [
     "Development Status :: 4 - Beta",
