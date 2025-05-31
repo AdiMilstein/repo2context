@@ -4,7 +4,7 @@ class Repo2context < Formula
   desc "One-command repo → Markdown context generator for LLM workflows"
   homepage "https://github.com/AdiMilstein/repo2context"
   url "https://files.pythonhosted.org/packages/source/r/repo2context/repo2context-0.1.0.tar.gz"
-  sha256 "REPLACE_WITH_ACTUAL_SHA256"
+  sha256 "1b5c2a92058360e7c4fbaf442a2a5aec0feb31acf9ceb59ad185ea9f7d19850c"
   license "MIT"
 
   depends_on "python@3.11"
