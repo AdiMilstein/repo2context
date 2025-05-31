@@ -10,7 +10,7 @@ class TestCLI:
 
     def run_cli(self, args, cwd=None):
         """Helper to run the CLI and return result."""
-        cmd = ["python", "-m", "repo2context.cli"] + args
+        cmd = ["poetry", "run", "python", "-m", "repo2context.cli"] + args
         result = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
         return result
 
