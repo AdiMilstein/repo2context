@@ -23,7 +23,11 @@ Transform any Git repository into optimally-sized Markdown files ready for Large
 ### Installation
 
 ```bash
-# Install with pipx (recommended)
+# Install with Homebrew (macOS/Linux)
+brew tap AdiMilstein/repo2context
+brew install repo2context
+
+# Install with pipx (recommended for all platforms)
 pipx install repo2context
 
 # Or with pip
