@@ -73,14 +73,12 @@ jobs:
       if: runner.os == 'Windows'
       run: |
         poetry config virtualenvs.in-project true
-        poetry config virtualenvs.prefer-active-python true
       shell: pwsh
 
     - name: Configure Poetry (Unix)
       if: runner.os != 'Windows'
       run: |
         poetry config virtualenvs.in-project true
-        poetry config virtualenvs.prefer-active-python true
 
     - name: Load cached venv
       id: cached-poetry-dependencies
