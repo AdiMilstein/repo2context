@@ -94,6 +94,29 @@ jobs:
     - name: Install project
       run: poetry install --no-interaction
 
+    - name: Verify package installation (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        Write-Host "Checking Poetry environment..."
+        poetry env info
+        Write-Host "Checking installed packages..."
+        poetry show
+        Write-Host "Testing Python module discovery..."
+        poetry run python -c "import sys; print('Python path:'); [print(p) for p in sys.path]"
+        Write-Host "Testing repo2context import..."
+        poetry run python -c "import repo2context; print('repo2context version:', repo2context.__version__)"
+        Write-Host "Testing CLI module..."
+        poetry run python -c "import repo2context.cli; print('CLI module loaded successfully')"
+      shell: pwsh
+
+    - name: Verify package installation (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        echo "Checking Poetry environment..."
+        poetry env info
+        echo "Testing repo2context import..."
+        poetry run python -c "import repo2context; print('repo2context version:', repo2context.__version__)"
+
     - name: Run tests
       run: |
         poetry run pytest tests/ -v --cov=src/repo2context --cov-report=xml
