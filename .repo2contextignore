@@ -1,0 +1,8 @@
+*.tmp
+temp/
+.cache/ 
+__pycache__/
+tests/
+.repo2context/
+.mypy_cache/
+.ruff_cache/

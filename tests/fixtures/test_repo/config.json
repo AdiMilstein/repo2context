@@ -1,0 +1,15 @@
+{
+  "name": "test-project",
+  "version": "1.0.0",
+  "author": "Test Author",
+  "settings": {
+    "debug": true,
+    "max_connections": 100,
+    "timeout": 30
+  },
+  "features": [
+    "feature1",
+    "feature2",
+    "feature3"
+  ]
+} 
