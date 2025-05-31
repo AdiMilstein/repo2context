@@ -94,11 +94,14 @@ Options:
 
 | Model | Context Window | Recommended `--max-tokens` | Use Case |
 |-------|----------------|---------------------------|----------|
-| GPT-4 | 128K | 85,000 (default) | Full repository context |
-| GPT-3.5 Turbo | 16K | 12,000 | Smaller projects/modules |
-| Claude 3 Sonnet | 200K | 150,000 | Large codebases |
-| Claude 3 Haiku | 200K | 150,000 | Fast processing |
-| Llama 2 70B | 4K | 3,000 | Local/private models |
+| **GPT-4o** | 128K | 85,000 (default) | Full repository context, latest OpenAI model |
+| **GPT-4 Turbo** | 128K | 85,000 | Large projects, stable performance |
+| **Claude 3.5 Sonnet** | 200K | 150,000 | Large codebases, exceptional reasoning |
+| **Claude 3 Haiku** | 200K | 150,000 | Fast processing, cost-effective |
+| **Gemini 1.5 Pro** | 1M+ | 500,000 | Massive documents, research analysis |
+| **DeepSeek-V3** | 128K | 85,000 | Open source, strong reasoning |
+| **GPT-3.5 Turbo** | 16K | 12,000 | Smaller projects, budget-friendly |
+| **Llama 3.3 70B** | 128K | 85,000 | Local/private models, self-hosted |
 
 ## Example Output
 
