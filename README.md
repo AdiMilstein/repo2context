@@ -23,10 +23,6 @@ Transform any Git repository into optimally-sized Markdown files ready for Large
 ### Installation
 
 ```bash
-# Install with Homebrew (macOS/Linux)
-brew tap AdiMilstein/repo2context
-brew install repo2context
-
 # Install with pipx (recommended for all platforms)
 pipx install repo2context
 
@@ -37,6 +33,27 @@ pip install repo2context
 pip install "repo2context[tiktoken]"     # Accurate token counting
 pip install "repo2context[summary]"      # AI-powered summaries
 pip install "repo2context[all]"          # All optional features
+
+# Install with Homebrew (macOS/Linux) - Note: May have dependency conflicts
+brew tap AdiMilstein/repo2context
+brew install repo2context
+# If using Homebrew and you want AI summaries, install OpenAI separately:
+# /opt/homebrew/Cellar/repo2context/0.1.0/libexec/bin/pip install openai
+```
+
+### Verify Installation
+
+```bash
+# Check installation
+repo2context --version
+repo2context --help
+
+# Test basic functionality
+repo2context . --only py --max-tokens 1000
+
+# Test AI summaries (requires OpenAI API key)
+export OPENAI_API_KEY="your-api-key-here"
+repo2context . --summary --only py --max-tokens 1000
 ```
 
 ### Basic Usage

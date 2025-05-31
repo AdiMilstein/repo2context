@@ -19,13 +19,21 @@ class Repo2context < Formula
     sha256 "f54c581f134a8ea96ce2023ab221d4d4d81ab614efa0b2fbce926387deb56c80"
   end
 
-  resource "openai" do
-    url "https://files.pythonhosted.org/packages/source/o/openai/openai-1.82.1.tar.gz"
-    sha256 "4d0b524bb4fb8e37b12e2d42e5df7e4e5b1a8b8c8a13f9e1c3a5d5f5c5f5c5f5"
-  end
-
   def install
     virtualenv_install_with_resources
+  end
+
+  def caveats
+    <<~EOS
+      To enable AI-powered file summaries, install the OpenAI package:
+        #{libexec}/bin/pip install openai
+
+      Then set your OpenAI API key:
+        export OPENAI_API_KEY="your-api-key-here"
+
+      Use the --summary flag to generate intelligent file summaries:
+        repo2context --summary
+    EOS
   end
 
   test do
