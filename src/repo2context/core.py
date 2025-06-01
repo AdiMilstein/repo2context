@@ -418,7 +418,9 @@ class IgnorePatternServiceImpl:
 class FileFilterServiceImpl:
     """Concrete implementation of file filter service."""
 
-    def __init__(self, only_extensions: set[str] | None = None, profile: str | None = None):
+    def __init__(
+        self, only_extensions: set[str] | None = None, profile: str | None = None
+    ):
         """Initialize file filter service."""
         self.only_extensions = only_extensions
         self.profile = profile
@@ -445,7 +447,7 @@ class FileFilterServiceImpl:
                     file_size = file_path.stat().st_size
                     if file_size > 8 * 1024:  # 8KB limit
                         return False
-                except (OSError, IOError):
+                except OSError:
                     return False
 
         return True
@@ -526,57 +528,61 @@ class ContextWriterServiceImpl:
     def _optimize_markdown_content(self, content: str, file_path: Path) -> str:
         """Optimize markdown content to reduce token usage."""
         # Only optimize markdown and README files
-        if not (file_path.suffix.lower() in ['.md', '.markdown'] or 
-                file_path.name.lower().startswith('readme')):
+        if not (
+            file_path.suffix.lower() in [".md", ".markdown"]
+            or file_path.name.lower().startswith("readme")
+        ):
             return content
-            
-        lines = content.split('\n')
+
+        lines = content.split("\n")
         optimized_lines = []
         i = 0
-        
+
         while i < len(lines):
             line = lines[i]
-            
+
             # Collapse multiple consecutive badge lines (starting with [![)
-            if line.strip().startswith('[!['):
+            if line.strip().startswith("[!["):
                 badge_lines = [line]
                 j = i + 1
-                while j < len(lines) and lines[j].strip().startswith('[!['):
+                while j < len(lines) and lines[j].strip().startswith("[!["):
                     badge_lines.append(lines[j])
                     j += 1
-                
+
                 # If we found multiple badge lines, collapse them
                 if len(badge_lines) > 3:
                     # Keep first 2 badges and add a collapsed indicator
                     optimized_lines.extend(badge_lines[:2])
-                    optimized_lines.append(f"<!-- {len(badge_lines) - 2} more badges -->")
+                    optimized_lines.append(
+                        f"<!-- {len(badge_lines) - 2} more badges -->"
+                    )
                 else:
                     optimized_lines.extend(badge_lines)
-                
+
                 i = j
                 continue
-            
+
             # Skip excessive blank lines (more than 2 consecutive)
-            if line.strip() == '':
+            if line.strip() == "":
                 blank_count = 1
                 j = i + 1
-                while j < len(lines) and lines[j].strip() == '':
+                while j < len(lines) and lines[j].strip() == "":
                     blank_count += 1
                     j += 1
-                
+
                 # Keep at most 1 blank line
                 if blank_count > 1:
-                    optimized_lines.append('')
+                    optimized_lines.append("")
                 else:
                     optimized_lines.append(line)
-                
+
                 i = j
                 continue
-            
+
             optimized_lines.append(line)
             i += 1
-        
-        return '\n'.join(optimized_lines)
+
+        return "\n".join(optimized_lines)
 
     def _write_file_content(self, file_info: FileInfo) -> None:
         """Write the actual file content to the output."""
@@ -587,7 +593,9 @@ class ContextWriterServiceImpl:
             self.current_file.write(f"**Summary:** {file_info.summary}\n\n")
 
         # Optimize content if it's markdown
-        optimized_content = self._optimize_markdown_content(file_info.content, file_info.path)
+        optimized_content = self._optimize_markdown_content(
+            file_info.content, file_info.path
+        )
 
         self.current_file.write(f"```{file_info.language}\n")
         self.current_file.write(f"# byte_count: {file_info.byte_count}\n")

@@ -17,7 +17,7 @@ MAX_TOKENS = 1000000
 PROFILE_MINIMAL = {
     "extensions": ["py", "md", "toml", "yaml", "yml", "json", "ini", "cfg", "conf"],
     "max_readme_kb": 8,
-    "description": "Only Python, small Markdown (≤8KB), and config files"
+    "description": "Only Python, small Markdown (≤8KB), and config files",
 }
 
 PROFILES = {
@@ -156,7 +156,7 @@ def validate_arguments(args: argparse.Namespace) -> None:
     if args.profile and args.only:
         print(ERROR_PROFILE_CONFLICTS, file=sys.stderr)
         sys.exit(2)
-    
+
     if args.profile and args.profile not in PROFILES:
         available = ", ".join(PROFILES.keys())
         print(ERROR_UNKNOWN_PROFILE.format(args.profile, available), file=sys.stderr)
