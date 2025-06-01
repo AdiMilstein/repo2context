@@ -17,6 +17,7 @@ MAX_TOKENS = 1000000
 
 class ProfileConfig(TypedDict):
     """Type definition for profile configuration."""
+
     extensions: list[str]
     max_readme_kb: int
     description: str
