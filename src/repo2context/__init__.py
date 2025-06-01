@@ -1,6 +1,6 @@
 """repo2context - One-command repo → Markdown context generator for LLM workflows."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 from .core import generate_context
 from .utils import detect_binary, estimate_tokens, guess_language

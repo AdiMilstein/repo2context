@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "repo2context"
-version = "0.1.0"
+version = "0.2.0"
 description = "One-command repo → Markdown context generator for LLM workflows"
 authors = ["Your Name <your.email@example.com>"]
 license = "MIT"
