@@ -3,6 +3,7 @@
 import argparse
 import sys
 from pathlib import Path
+from typing import TypedDict
 
 from . import __version__
 from .core import generate_context
@@ -13,14 +14,22 @@ from .core import generate_context
 MIN_TOKENS = 1000
 MAX_TOKENS = 1000000
 
+
+class ProfileConfig(TypedDict):
+    """Type definition for profile configuration."""
+    extensions: list[str]
+    max_readme_kb: int
+    description: str
+
+
 # Profile configurations
-PROFILE_MINIMAL = {
+PROFILE_MINIMAL: ProfileConfig = {
     "extensions": ["py", "md", "toml", "yaml", "yml", "json", "ini", "cfg", "conf"],
     "max_readme_kb": 8,
     "description": "Only Python, small Markdown (≤8KB), and config files",
 }
 
-PROFILES = {
+PROFILES: dict[str, ProfileConfig] = {
     "minimal": PROFILE_MINIMAL,
 }
 
