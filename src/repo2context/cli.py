@@ -13,12 +13,25 @@ from .core import generate_context
 MIN_TOKENS = 1000
 MAX_TOKENS = 1000000
 
+# Profile configurations
+PROFILE_MINIMAL = {
+    "extensions": ["py", "md", "toml", "yaml", "yml", "json", "ini", "cfg", "conf"],
+    "max_readme_kb": 8,
+    "description": "Only Python, small Markdown (≤8KB), and config files"
+}
+
+PROFILES = {
+    "minimal": PROFILE_MINIMAL,
+}
+
 # Error messages
 ERROR_DEPENDENCY_MISSING = "Error: --summary requires OpenAI dependency. Install with: pip install 'repo2context[summary]'"
 ERROR_REPO_NOT_EXISTS = "Error: Repository path '{}' does not exist"
 ERROR_REPO_NOT_DIR = "Error: Repository path '{}' is not a directory"
 ERROR_RULES_NOT_EXISTS = "Error: Rules file '{}' does not exist"
 ERROR_TOKEN_RANGE = f"Error: --max-tokens must be between {MIN_TOKENS} and {MAX_TOKENS}"
+ERROR_UNKNOWN_PROFILE = "Error: Unknown profile '{}'. Available profiles: {}"
+ERROR_PROFILE_CONFLICTS = "Error: --profile cannot be used with --only"
 
 # Program metadata
 PROG_NAME = "repo2context"
@@ -44,6 +57,9 @@ Examples:
 
   # Limit to specific file types
   repo2context --only py,js,ts
+
+  # Use essentials preset (Python, small Markdown, configs)
+  repo2context --profile minimal
 
   # Custom output directory and token limit
   repo2context --output ./context --max-tokens 50000
@@ -92,6 +108,11 @@ Examples:
     )
 
     parser.add_argument(
+        "--profile",
+        help="Use predefined profile (minimal: py,md≤8KB,configs)",
+    )
+
+    parser.add_argument(
         "--version",
         action="version",
         version=f"{PROG_NAME} {__version__}",
@@ -131,6 +152,16 @@ def validate_arguments(args: argparse.Namespace) -> None:
         print(ERROR_RULES_NOT_EXISTS.format(args.rules), file=sys.stderr)
         sys.exit(2)
 
+    # Validate profile
+    if args.profile and args.only:
+        print(ERROR_PROFILE_CONFLICTS, file=sys.stderr)
+        sys.exit(2)
+    
+    if args.profile and args.profile not in PROFILES:
+        available = ", ".join(PROFILES.keys())
+        print(ERROR_UNKNOWN_PROFILE.format(args.profile, available), file=sys.stderr)
+        sys.exit(2)
+
     # Store processed repo path back for later use
     args.repo_path_obj = repo_path_obj
 
@@ -142,6 +173,16 @@ def parse_extensions(extensions_str: str | None) -> list[str] | None:
     return [ext.strip() for ext in extensions_str.split(",")]
 
 
+def resolve_extensions(args: argparse.Namespace) -> list[str] | None:
+    """Resolve extensions from either --only or --profile arguments."""
+    if args.only:
+        return parse_extensions(args.only)
+    elif args.profile:
+        profile_config = PROFILES[args.profile]
+        return profile_config["extensions"]
+    return None
+
+
 def main() -> None:
     """Main CLI entry point."""
     parser = create_parser()
@@ -151,7 +192,7 @@ def main() -> None:
     validate_arguments(args)
 
     # Parse extensions
-    only_extensions = parse_extensions(args.only)
+    only_extensions = resolve_extensions(args)
 
     # Generate context
     try:
@@ -162,6 +203,7 @@ def main() -> None:
             max_tokens=args.max_tokens,
             only_extensions=only_extensions,
             enable_summary=args.summary,
+            profile=args.profile,
         )
 
         sys.exit(exit_code)

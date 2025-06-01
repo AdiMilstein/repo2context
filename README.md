@@ -68,6 +68,9 @@ repo2context /path/to/repo
 # Limit to specific file types
 repo2context --only py,js,ts
 
+# Use essentials preset for focused analysis
+repo2context --profile minimal
+
 # Custom output location and token limit
 repo2context --output ./context --max-tokens 50000
 ```
@@ -85,9 +88,57 @@ Options:
   --output PATH         Output directory (defaults to ./.repo2context)
   --max-tokens INTEGER  Maximum tokens per file (default: 85000, min: 1000, max: 1000000)
   --only TEXT          File extensions to include (comma-separated, e.g. 'py,js,ts')
+  --profile TEXT       Use predefined profile (minimal: py,md≤8KB,configs)
   --summary            Generate AI-powered file summaries (requires OpenAI API key)
   --version            Show version and exit
   --help               Show help and exit
+```
+
+## Processing Profiles
+
+### Minimal Profile (`--profile minimal`)
+
+Optimized for essential code context with maximum token efficiency:
+
+- **Python files** (`.py`) - Core application logic
+- **Small Markdown** (`.md`, `.markdown` ≤ 8KB) - Essential documentation only
+- **Configuration files** (`.toml`, `.yaml`, `.yml`, `.json`, `.ini`, `.cfg`, `.conf`) - Project settings
+
+```bash
+# Use minimal profile for focused analysis
+repo2context --profile minimal
+
+# Cannot combine with --only
+repo2context --profile minimal --only py  # Error: conflicts with --only
+```
+
+**Use cases:**
+- Code review and analysis
+- Architecture understanding
+- Bug investigation
+- AI pair programming sessions
+
+## Content Optimizations
+
+repo2context automatically optimizes content to reduce token usage:
+
+### Dependency Lock Files (Filtered by Default)
+
+High-token, low-value files are now ignored by default:
+- `poetry.lock`, `package-lock.json`, `yarn.lock` (50K+ tokens each)
+- `Pipfile.lock`, `Cargo.lock`, `composer.lock`
+- `Gemfile.lock`, `go.sum`, `pnpm-lock.yaml`
+
+### Markdown Optimization (~15% token reduction)
+
+For `.md` and README files:
+- **Blank line reduction** - Collapses excessive whitespace
+- **Badge collapsing** - Reduces multiple consecutive badges to key examples
+- **Binary content detection** - Prevents huge tables or data blocks
+
+```bash
+# Before optimization: 1,247 tokens
+# After optimization: 1,059 tokens (~15% reduction)
 ```
 
 ## Size Limits & Token Estimates
@@ -199,6 +250,7 @@ repo2context automatically ignores:
 - Binary files: `*.so`, `*.dylib`, `*.dll`, `*.exe`
 - OS files: `.DS_Store`, `Thumbs.db`
 - Logs: `*.log`, temporary files
+- **Dependency lock files**: `poetry.lock`, `package-lock.json`, `yarn.lock`, etc.
 
 ## Advanced Usage
 
@@ -227,6 +279,9 @@ repo2context --max-tokens 25000
 
 # Focus on source code only
 repo2context --only py,js,ts,jsx,tsx,go,rs,java,cpp,c,h
+
+# Use minimal profile for token efficiency
+repo2context --profile minimal --max-tokens 50000
 ```
 
 ## Performance Benchmarks

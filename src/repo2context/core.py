@@ -30,13 +30,22 @@ CHARS_PER_TOKEN = 4  # Heuristic for token estimation
 DEFAULT_IGNORE_PATTERNS = [
     ".git/",
     ".repo2context/",
-    "*.pyc",
-    "__pycache__/",
+    ".svn/",
+    ".hg/",
     ".DS_Store",
+    "Thumbs.db",
+    "*.pyc",
     "*.so",
     "*.dylib",
     "*.dll",
     "*.exe",
+    "*.o",
+    "*.obj",
+    "*.a",
+    "*.lib",
+    "*.bin",
+    "*.class",
+    "__pycache__/",
     "node_modules/",
     ".venv/",
     "venv/",
@@ -52,6 +61,16 @@ DEFAULT_IGNORE_PATTERNS = [
     "dist/",
     "build/",
     "*.egg-info/",
+    # Dependency lock files (high token cost, low architectural value)
+    "poetry.lock",
+    "package-lock.json",
+    "yarn.lock",
+    "pnpm-lock.yaml",
+    "Pipfile.lock",
+    "Cargo.lock",
+    "composer.lock",
+    "Gemfile.lock",
+    "go.sum",
 ]
 
 # OpenAI configuration
@@ -102,6 +121,7 @@ class ProcessingConfig:
     max_tokens: int
     only_extensions: set[str] | None
     enable_summary: bool = False
+    profile: str | None = None
 
 
 # === DOMAIN LAYER: Repository Interfaces ===
@@ -398,9 +418,10 @@ class IgnorePatternServiceImpl:
 class FileFilterServiceImpl:
     """Concrete implementation of file filter service."""
 
-    def __init__(self, only_extensions: set[str] | None = None):
+    def __init__(self, only_extensions: set[str] | None = None, profile: str | None = None):
         """Initialize file filter service."""
         self.only_extensions = only_extensions
+        self.profile = profile
 
     def should_process(self, file_path: Path, repo_root: Path) -> bool:
         """Check if a file should be processed."""
@@ -410,9 +431,22 @@ class FileFilterServiceImpl:
 
         # Check extension filter
         if self.only_extensions:
-            extension = file_path.suffix.lower()
-            if extension not in self.only_extensions:
+            extension = file_path.suffix.lstrip(".").lower()
+            # Convert extensions set to same format (without dots) for comparison
+            allowed_extensions = {ext.lstrip(".") for ext in self.only_extensions}
+            if extension not in allowed_extensions:
                 return False
+
+        # Apply profile-specific filters
+        if self.profile == "minimal":
+            # For minimal profile, limit markdown files to 8KB
+            if file_path.suffix.lower() in [".md", ".markdown"]:
+                try:
+                    file_size = file_path.stat().st_size
+                    if file_size > 8 * 1024:  # 8KB limit
+                        return False
+                except (OSError, IOError):
+                    return False
 
         return True
 
@@ -489,6 +523,61 @@ class ContextWriterServiceImpl:
             and self.current_tokens > 0
         )
 
+    def _optimize_markdown_content(self, content: str, file_path: Path) -> str:
+        """Optimize markdown content to reduce token usage."""
+        # Only optimize markdown and README files
+        if not (file_path.suffix.lower() in ['.md', '.markdown'] or 
+                file_path.name.lower().startswith('readme')):
+            return content
+            
+        lines = content.split('\n')
+        optimized_lines = []
+        i = 0
+        
+        while i < len(lines):
+            line = lines[i]
+            
+            # Collapse multiple consecutive badge lines (starting with [![)
+            if line.strip().startswith('[!['):
+                badge_lines = [line]
+                j = i + 1
+                while j < len(lines) and lines[j].strip().startswith('[!['):
+                    badge_lines.append(lines[j])
+                    j += 1
+                
+                # If we found multiple badge lines, collapse them
+                if len(badge_lines) > 3:
+                    # Keep first 2 badges and add a collapsed indicator
+                    optimized_lines.extend(badge_lines[:2])
+                    optimized_lines.append(f"<!-- {len(badge_lines) - 2} more badges -->")
+                else:
+                    optimized_lines.extend(badge_lines)
+                
+                i = j
+                continue
+            
+            # Skip excessive blank lines (more than 2 consecutive)
+            if line.strip() == '':
+                blank_count = 1
+                j = i + 1
+                while j < len(lines) and lines[j].strip() == '':
+                    blank_count += 1
+                    j += 1
+                
+                # Keep at most 1 blank line
+                if blank_count > 1:
+                    optimized_lines.append('')
+                else:
+                    optimized_lines.append(line)
+                
+                i = j
+                continue
+            
+            optimized_lines.append(line)
+            i += 1
+        
+        return '\n'.join(optimized_lines)
+
     def _write_file_content(self, file_info: FileInfo) -> None:
         """Write the actual file content to the output."""
         assert self.current_file is not None  # For mypy
@@ -497,12 +586,15 @@ class ContextWriterServiceImpl:
         if file_info.summary:
             self.current_file.write(f"**Summary:** {file_info.summary}\n\n")
 
+        # Optimize content if it's markdown
+        optimized_content = self._optimize_markdown_content(file_info.content, file_info.path)
+
         self.current_file.write(f"```{file_info.language}\n")
         self.current_file.write(f"# byte_count: {file_info.byte_count}\n")
         self.current_file.write(f"# est_tokens: {file_info.token_count}\n")
-        self.current_file.write(file_info.content)
+        self.current_file.write(optimized_content)
 
-        if not file_info.content.endswith("\n"):
+        if not optimized_content.endswith("\n"):
             self.current_file.write("\n")
 
         self.current_file.write("```\n")
@@ -619,6 +711,7 @@ class ContextGenerationServiceFactory:
         max_tokens: int = DEFAULT_MAX_TOKENS,
         only_extensions: list[str] | None = None,
         enable_summary: bool = False,
+        profile: str | None = None,
     ) -> tuple[GenerateContextUseCase, ProcessingConfig]:
         """Create use case with all dependencies injected."""
         # Set defaults
@@ -639,12 +732,13 @@ class ContextGenerationServiceFactory:
             max_tokens=max_tokens,
             only_extensions=extensions_set,
             enable_summary=enable_summary,
+            profile=profile,
         )
 
         # Create dependencies
         file_system_repo = FileSystemRepositoryImpl()
         ignore_service = IgnorePatternServiceImpl(rules_file, repo_path)
-        filter_service = FileFilterServiceImpl(extensions_set)
+        filter_service = FileFilterServiceImpl(extensions_set, profile)
         processor_service = FileProcessorServiceImpl(file_system_repo)
         writer_service = ContextWriterServiceImpl(output_path, max_tokens)
 
@@ -690,6 +784,7 @@ def generate_context(
     max_tokens: int = DEFAULT_MAX_TOKENS,
     only_extensions: list[str] | None = None,
     enable_summary: bool = False,
+    profile: str | None = None,
 ) -> int:
     """
     Generate context files from a repository.
@@ -704,6 +799,7 @@ def generate_context(
         max_tokens: Maximum tokens per output file
         only_extensions: List of file extensions to include
         enable_summary: Whether to generate AI-powered file summaries
+        profile: Predefined profile for processing (e.g., 'minimal')
 
     Returns:
         Exit code: 0 for success, 1 if files were split, 2 for fatal error
@@ -715,6 +811,7 @@ def generate_context(
         max_tokens=max_tokens,
         only_extensions=only_extensions,
         enable_summary=enable_summary,
+        profile=profile,
     )
 
     result = use_case.execute(config)
